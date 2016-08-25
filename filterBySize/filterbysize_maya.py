@@ -1,15 +1,20 @@
+# Filter by Size 
+# Works for maya 2017
+# pyside2
+# Yvo von Berg / Technical Artist
+# 2016, yvovonberg.nl
+
+
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import Qt
 from PySide2 import QtGui
 import pymel.core as pm
-import math
 
 import logging
 logger = logging.getLogger(__name__)
 logger.addHandler(hdlr) 
 logger.setLevel(logging.INFO)
-
 
 class MainWindow(QDialog):
     def __init__(self, MainFilter):  
@@ -141,7 +146,6 @@ class MainFilter(object):
         layer = pm.createDisplayLayer( empty=True, name='Filterrr_layer_' )
         for obj in allObjects:
             pm.editDisplayLayerMembers( layer, obj )
-
 
 if __name__ == "__main__":
     filterClass = MainFilter()

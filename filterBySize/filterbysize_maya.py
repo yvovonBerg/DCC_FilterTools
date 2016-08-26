@@ -11,6 +11,10 @@ from PySide2.QtCore import Qt
 from PySide2 import QtGui
 import pymel.core as pm
 
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 
 class MainWindow(QDialog):
@@ -26,12 +30,15 @@ class MainWindow(QDialog):
         # spinboxes
         self.sizeX_input = QDoubleSpinBox(self)
         self.sizeX_input.setGeometry(0, 50, 70, 50)
+        self.sizeX_input.setMaximum(1000)
 
         self.sizeY_input = QDoubleSpinBox(self)
         self.sizeY_input.setGeometry(70, 50, 70, 50)
+        self.sizeY_input.setMaximum(1000)
 
         self.sizeZ_input = QDoubleSpinBox(self)
         self.sizeZ_input.setGeometry(140, 50, 70, 50)
+        self.sizeZ_input.setMaximum(1000)
 
         # greater than 
         self.xGreater_input = QComboBox(self)

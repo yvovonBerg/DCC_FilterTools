@@ -1,20 +1,14 @@
 # Filter by Size 
-# Works for maya 2017
-# pyside2
+# Tested on 3Ds Max 2017
 # Yvo von Berg / Technical Artist
 # 2016, yvovonberg.nl
 
-
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import Qt
-from PySide2 import QtGui
-import pymel.core as pm
-
-
+from PySide.QtCore import *
+from PySide.QtGui import *
 
 class MainWindow(QDialog):
     def __init__(self, MainFilter):  
+        MaxPlus.CUI.DisableAccelerators()
         QDialog.__init__(self, None, Qt.WindowStaysOnTopHint)
 
         self.setWindowTitle('FilterBySize')
@@ -26,12 +20,15 @@ class MainWindow(QDialog):
         # spinboxes
         self.sizeX_input = QDoubleSpinBox(self)
         self.sizeX_input.setGeometry(0, 50, 70, 50)
+        self.sizeX_input.setMaximum(1000)
 
         self.sizeY_input = QDoubleSpinBox(self)
         self.sizeY_input.setGeometry(70, 50, 70, 50)
+        self.sizeY_input.setMaximum(1000)
 
         self.sizeZ_input = QDoubleSpinBox(self)
         self.sizeZ_input.setGeometry(140, 50, 70, 50)
+        self.sizeZ_input.setMaximum(1000)
 
         # greater than 
         self.xGreater_input = QComboBox(self)
@@ -72,7 +69,7 @@ class MainFilter(object):
 
     def measureInput(self):
 
-        sel = pm.selected()
+        sel = list(MaxPlus.SelectionManager.Nodes)
         if len(sel) > 0:
             x,y,z = self.getDimensions(sel[0])
 
@@ -98,19 +95,30 @@ class MainFilter(object):
 
         return xValue, yValue, zValue
 
-    def getDimensions(self, mesh):
-        # [minX, minY, minZ, maxX, maxY, maxZ]
-        bbox = pm.exactWorldBoundingBox(mesh)
+    def GetWorldBoundBox(self, node):
+        '''
+             Gets world boundingbox of node
+        '''
+        vm = MaxPlus.ViewportManager
+        av = vm.GetActiveViewport()
 
-        measureX = bbox[3] - bbox[0]
-        measureY = bbox[4] - bbox[1]
-        measureZ = bbox[5] - bbox[2]
+        return node.GetBaseObject().GetWorldBoundBox(node, av)
+
+    def getDimensions(self, iNode):
+
+        bbox = self.GetWorldBoundBox(iNode)
+        # [minX, minY, minZ, maxX, maxY, maxZ]
+        measureX = bbox.Max.X - bbox.Min.X
+        measureY = bbox.Max.Y - bbox.Min.Y
+        measureZ = bbox.Max.Z - bbox.Min.Z
 
         return measureX, measureY, measureZ
 
     def doFilter(self):
+
+        
         # get selection
-        sel =  pm.selected()
+        sel = MaxPlus.SelectionManager.Nodes
 
         # get the user xyz values
         userX, userY, userZ = self.getXYZvalues()
@@ -122,9 +130,10 @@ class MainFilter(object):
 
         # loop through every selected object
         for obj in sel:
+
             # get dimensions for current object
             x,y,z = self.getDimensions(obj)
-            
+
             if (xGreater and (x > userX)) or (not xGreater and (x < userX)) and \
             (yGreater and (y > userY)) or (not yGreater and (y < userY)) and \
             (zGreater and (z > userZ)) or (not zGreater and (z < userZ)):
@@ -133,17 +142,17 @@ class MainFilter(object):
         objCount = len(self.filteredObjects)
 
         if objCount > 0:
-            logger.info('Found ' + str(objCount))
+            print 'Found ' + str(objCount)
             self.addToLayer(self.filteredObjects)
         else:
-            logger.warning('No objects found!')
+            print 'no objects found'
 
 
     def addToLayer(self, allObjects):
-        # create new display layer
-        layer = pm.createDisplayLayer( empty=True, name='Filterrr_layer_' )
+        # create new layer
+        layer = MaxPlus.LayerManager.CreateLayer("Filterrr_layer_")
         for obj in allObjects:
-            pm.editDisplayLayerMembers( layer, obj )
+            layer.AddToLayer(obj)
 
 if __name__ == "__main__":
     filterClass = MainFilter()
